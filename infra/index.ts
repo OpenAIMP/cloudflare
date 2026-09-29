@@ -15,8 +15,8 @@ if (!apiToken || !accountId) {
 // Explicit provider so credentials are passed correctly
 const provider = new cloudflare.Provider("cloudflare-provider", {
   apiToken: apiToken,
-  accountId: accountId,
 });
+
 
 const githubClientId = config.requireSecret("githubClientId");
 const githubClientSecret = config.requireSecret("githubClientSecret");
