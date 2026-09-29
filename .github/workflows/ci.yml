@@ -44,8 +44,8 @@ jobs:
         run: |
           pulumi config set cloudflare:accountId ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           pulumi config set cloudflare:apiToken ${{ secrets.CLOUDFLARE_API_TOKEN }} --secret
-          pulumi config set githubClientId ${{ secrets.GITHUB_CLIENT_ID }} --secret
-          pulumi config set githubClientSecret ${{ secrets.GITHUB_CLIENT_SECRET }} --secret
+          pulumi config set githubClientId ${{ secrets.GH_CLIENT_ID }} --secret
+          pulumi config set githubClientSecret ${{ secrets.GH_CLIENT_SECRET }} --secret
           pulumi config set appBaseUrl ${{ secrets.APP_BASE_URL }}
           pulumi config set sessionSecret ${{ secrets.SESSION_SECRET }} --secret
           pulumi preview

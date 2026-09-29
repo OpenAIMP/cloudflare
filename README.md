@@ -37,8 +37,8 @@ Go to your repo → **Settings → Secrets and variables → Actions** → **New
 |---|---|
 | `CLOUDFLARE_API_TOKEN` | Create at [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens) using the "Edit Cloudflare Workers" template |
 | `CLOUDFLARE_ACCOUNT_ID` | `1e7e9bb45eca8d59ec86bbd6dac9b900` |
-| `GITHUB_CLIENT_ID` | From your [GitHub OAuth App](https://github.com/settings/applications/new) |
-| `GITHUB_CLIENT_SECRET` | From your GitHub OAuth App |
+| `GH_CLIENT_ID` | From your [GitHub OAuth App](https://github.com/settings/applications/new) (GitHub reserves the GITHUB_ prefix) |
+| `GH_CLIENT_SECRET` | From your GitHub OAuth App |
 | `APP_BASE_URL` | `https://ai-search-chat-agent.<your-subdomain>.workers.dev` (check [Workers subdomain](https://dash.cloudflare.com/1e7e9bb45eca8d59ec86bbd6dac9b900/workers/subdomain)) |
 | `SESSION_SECRET` | Any random 32+ character string (e.g. `openssl rand -hex 32`) |
 | `PULUMI_CONFIG_PASSPHRASE` | Any passphrase to encrypt Pulumi state (e.g. `openssl rand -base64 24`) |
