@@ -5,7 +5,12 @@ import * as fs from "fs";
 // --- Config ---
 const config = new pulumi.Config();
 
-const accountId = config.require("cloudflare:accountId");
+// Cloudflare credentials come from env vars:
+//   CLOUDFLARE_API_TOKEN
+//   CLOUDFLARE_ACCOUNT_ID
+// The Cloudflare Pulumi provider reads these automatically.
+const accountId = process.env.CLOUDFLARE_ACCOUNT_ID!;
+
 const githubClientId = config.requireSecret("githubClientId");
 const githubClientSecret = config.requireSecret("githubClientSecret");
 const appBaseUrl = config.require("appBaseUrl");
@@ -18,7 +23,6 @@ const sessionsNamespace = new cloudflare.WorkersKvNamespace("sessions-kv", {
 });
 
 // --- Worker Script ---
-// Read the bundled output as a string (produced by wrangler/esbuild in CI)
 const bundledCode = fs.readFileSync("../dist/index.js", "utf-8");
 
 const workerScript = new cloudflare.WorkerScript("ai-search-chat-agent", {
@@ -64,7 +68,5 @@ const workerScript = new cloudflare.WorkerScript("ai-search-chat-agent", {
 });
 
 // --- Outputs ---
-// The Worker is automatically available at:
-// https://ai-search-chat-agent.<subdomain>.workers.dev
 export const workerName = workerScript.name;
 export const kvNamespaceId = sessionsNamespace.id;
