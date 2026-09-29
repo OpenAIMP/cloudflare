@@ -12,7 +12,7 @@ jobs:
     name: Build & Deploy with Pulumi
     permissions:
       contents: read
-      id-token: write  # Required for OIDC auth if using Pulumi Cloud
+      id-token: write
 
     steps:
       - name: Checkout
@@ -21,11 +21,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: "22"
 
       - name: Install Worker dependencies
-        run: npm ci
+        run: npm install
 
       - name: Bundle Worker with Wrangler
         id: bundle
@@ -37,7 +36,6 @@ jobs:
           npx wrangler deploy --dry-run --outdir dist
         continue-on-error: true
 
-      # Fallback: use esbuild if wrangler dry-run doesn't output to dist
       - name: Bundle Worker with esbuild (fallback)
         if: steps.bundle.outcome != 'success' || !hashFiles('dist/index.js')
         run: |
@@ -51,7 +49,7 @@ jobs:
       - name: Install Pulumi dependencies
         run: |
           cd infra
-          npm ci
+          npm install
 
       - name: Set Pulumi config
         working-directory: infra

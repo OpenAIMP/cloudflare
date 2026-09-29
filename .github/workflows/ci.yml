@@ -19,11 +19,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: "22"
 
       - name: Install Worker dependencies
-        run: npm ci
+        run: npm install
 
       - name: TypeScript type check (Worker)
         run: npx tsc --noEmit
@@ -31,7 +30,7 @@ jobs:
       - name: Install Pulumi dependencies
         run: |
           cd infra
-          npm ci
+          npm install
 
       - name: TypeScript type check (Pulumi)
         working-directory: infra
