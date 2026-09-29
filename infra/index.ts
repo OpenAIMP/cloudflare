@@ -1,16 +1,9 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as cloudflare from "@pulumi/cloudflare";
+import * as fs from "fs";
 
 // --- Config ---
 const config = new pulumi.Config();
-
-// Required config values (set via `pulumi config set`)
-// pulumi config set cloudflare:accountId <your-account-id>
-// pulumi config set cloudflare:apiToken <your-api-token>  --secret
-// pulumi config set githubClientId <your-github-oauth-client-id>  --secret
-// pulumi config set githubClientSecret <your-github-oauth-client-secret>  --secret
-// pulumi config set appBaseUrl https://ai-search-chat-agent.<your-subdomain>.workers.dev
-// pulumi config set sessionSecret <random-32-char-string>  --secret
 
 const accountId = config.require("cloudflare:accountId");
 const githubClientId = config.requireSecret("githubClientId");
@@ -25,13 +18,13 @@ const sessionsNamespace = new cloudflare.WorkersKvNamespace("sessions-kv", {
 });
 
 // --- Worker Script ---
-// The bundled Worker code is produced by `npx wrangler deploy --dry-run` or esbuild.
-// Pulumi uploads the bundled script content.
+// Read the bundled output as a string (produced by wrangler/esbuild in CI)
+const bundledCode = fs.readFileSync("../dist/index.js", "utf-8");
+
 const workerScript = new cloudflare.WorkerScript("ai-search-chat-agent", {
   accountId: accountId,
   name: "ai-search-chat-agent",
-  // The bundled output from wrangler/esbuild (see GitHub Actions workflow)
-  content: new pulumi.asset.FileAsset("../dist/index.js"),
+  content: bundledCode,
   compatibilityDate: "2026-09-29",
   compatibilityFlags: ["nodejs_compat"],
   kvNamespaceBindings: [
@@ -70,17 +63,8 @@ const workerScript = new cloudflare.WorkerScript("ai-search-chat-agent", {
   ],
 });
 
-// --- Workers.dev subdomain route ---
-// Enable the workers.dev route so the Worker is accessible at
-// https://ai-search-chat-agent.<subdomain>.workers.dev
-const workersDevRoute = new cloudflare.WorkerDomain("worker-dev-route", {
-  accountId: accountId,
-  hostname: "ai-search-chat-agent",
-  service: "ai-search-chat-agent",
-  environment: "production",
-});
-
 // --- Outputs ---
+// The Worker is automatically available at:
+// https://ai-search-chat-agent.<subdomain>.workers.dev
 export const workerName = workerScript.name;
 export const kvNamespaceId = sessionsNamespace.id;
-export const workerUrl = pulumi.interpolate`https://ai-search-chat-agent.${workersDevRoute.hostname}.workers.dev`;
