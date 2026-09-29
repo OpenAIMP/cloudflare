@@ -5,11 +5,18 @@ import * as fs from "fs";
 // --- Config ---
 const config = new pulumi.Config();
 
-// Cloudflare credentials come from env vars:
-//   CLOUDFLARE_API_TOKEN
-//   CLOUDFLARE_ACCOUNT_ID
-// The Cloudflare Pulumi provider reads these automatically.
-const accountId = process.env.CLOUDFLARE_ACCOUNT_ID!;
+const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+
+if (!apiToken || !accountId) {
+  throw new Error("CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID must be set");
+}
+
+// Explicit provider so credentials are passed correctly
+const provider = new cloudflare.Provider("cloudflare-provider", {
+  apiToken: apiToken,
+  accountId: accountId,
+});
 
 const githubClientId = config.requireSecret("githubClientId");
 const githubClientSecret = config.requireSecret("githubClientSecret");
@@ -20,7 +27,7 @@ const sessionSecret = config.requireSecret("sessionSecret");
 const sessionsNamespace = new cloudflare.WorkersKvNamespace("sessions-kv", {
   accountId: accountId,
   title: "SESSIONS",
-});
+}, { provider });
 
 // --- Worker Script ---
 const bundledCode = fs.readFileSync("../dist/index.js", "utf-8");
@@ -65,7 +72,7 @@ const workerScript = new cloudflare.WorkerScript("ai-search-chat-agent", {
       text: sessionSecret,
     },
   ],
-});
+}, { provider });
 
 // --- Outputs ---
 export const workerName = workerScript.name;
