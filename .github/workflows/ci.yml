@@ -1,0 +1,51 @@
+name: CI Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    name: Type Check
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Worker dependencies
+        run: npm ci
+
+      - name: TypeScript type check (Worker)
+        run: npx tsc --noEmit
+
+      - name: Install Pulumi dependencies
+        run: |
+          cd infra
+          npm ci
+
+      - name: TypeScript type check (Pulumi)
+        working-directory: infra
+        run: npx tsc --noEmit
+
+      - name: Pulumi Preview
+        working-directory: infra
+        env:
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+        run: |
+          pulumi config set cloudflare:accountId ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          pulumi config set cloudflare:apiToken ${{ secrets.CLOUDFLARE_API_TOKEN }} --secret
+          pulumi config set githubClientId ${{ secrets.GITHUB_CLIENT_ID }} --secret
+          pulumi config set githubClientSecret ${{ secrets.GITHUB_CLIENT_SECRET }} --secret
+          pulumi config set appBaseUrl ${{ secrets.APP_BASE_URL }}
+          pulumi config set sessionSecret ${{ secrets.SESSION_SECRET }} --secret
+          pulumi preview

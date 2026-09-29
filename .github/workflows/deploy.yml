@@ -1,0 +1,78 @@
+name: Deploy to Cloudflare Workers
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Build & Deploy with Pulumi
+    permissions:
+      contents: read
+      id-token: write  # Required for OIDC auth if using Pulumi Cloud
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Worker dependencies
+        run: npm ci
+
+      - name: Bundle Worker with Wrangler
+        id: bundle
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p dist
+          npx wrangler deploy --dry-run --outdir dist
+        continue-on-error: true
+
+      # Fallback: use esbuild if wrangler dry-run doesn't output to dist
+      - name: Bundle Worker with esbuild (fallback)
+        if: steps.bundle.outcome != 'success' || !hashFiles('dist/index.js')
+        run: |
+          npx esbuild src/index.ts --bundle --format=esm --platform=browser --outfile=dist/index.js --external:cloudflare:workers
+
+      - name: Install Pulumi
+        uses: pulumi/setup-pulumi@v2
+        with:
+          pulumi-version: "latest"
+
+      - name: Install Pulumi dependencies
+        run: |
+          cd infra
+          npm ci
+
+      - name: Set Pulumi config
+        working-directory: infra
+        env:
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+        run: |
+          pulumi config set cloudflare:accountId ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          pulumi config set cloudflare:apiToken ${{ secrets.CLOUDFLARE_API_TOKEN }} --secret
+          pulumi config set githubClientId ${{ secrets.GITHUB_CLIENT_ID }} --secret
+          pulumi config set githubClientSecret ${{ secrets.GITHUB_CLIENT_SECRET }} --secret
+          pulumi config set appBaseUrl ${{ secrets.APP_BASE_URL }}
+          pulumi config set sessionSecret ${{ secrets.SESSION_SECRET }} --secret
+
+      - name: Pulumi Preview
+        working-directory: infra
+        env:
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+        run: pulumi preview
+
+      - name: Pulumi Up
+        working-directory: infra
+        env:
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+        run: pulumi up --yes

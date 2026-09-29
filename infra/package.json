@@ -1,0 +1,16 @@
+{
+  "name": "ai-search-chat-agent-infra",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "pulumi": "pulumi",
+    "preview": "pulumi preview",
+    "up": "pulumi up --yes",
+    "destroy": "pulumi destroy --yes"
+  },
+  "devDependencies": {
+    "@pulumi/pulumi": "^3.142.0",
+    "@pulumi/cloudflare": "^5.44.0",
+    "typescript": "^5.7.0"
+  }
+}
