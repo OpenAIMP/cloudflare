@@ -55,11 +55,11 @@ jobs:
         working-directory: infra
         env:
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           pulumi login --local
           pulumi stack init dev || pulumi stack select dev
-          pulumi config set cloudflare:accountId ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          pulumi config set cloudflare:apiToken ${{ secrets.CLOUDFLARE_API_TOKEN }} --secret
           pulumi config set githubClientId ${{ secrets.GH_CLIENT_ID }} --secret
           pulumi config set githubClientSecret ${{ secrets.GH_CLIENT_SECRET }} --secret
           pulumi config set appBaseUrl ${{ secrets.APP_BASE_URL }}
@@ -69,10 +69,14 @@ jobs:
         working-directory: infra
         env:
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pulumi preview
 
       - name: Pulumi Up
         working-directory: infra
         env:
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pulumi up --yes
